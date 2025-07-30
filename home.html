@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>العميدي للألكترونيات - الرئيسية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="sidebar.css">
+<script src="sidebar.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Cairo', sans-serif;
+      background: #f8f9fa;
+    }
+    .dashboard {
+      margin-right: 20px;
+      padding: 20px;
+    }
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    .card h3 {
+      color: #3c556e;
+      margin-top: 0;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1abc9c;
+      margin: 10px 0;
+    }
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 30px;
+    }
+    .quick-link {
+      background: #3c556e;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: .3s;
+    }
+    .quick-link:hover {
+      background: #1abc9c;
+    }
+    .chart-container {
+      margin-top: 30px;
+      height: 300px;
+    }
+
+/* الوضع الليلي */
+body.dark-mode {
+  background: #121212;
+  color: #f1f1f1;
+}
+
+body.dark-mode .card {
+  background: #1e1e1e;
+  color: #f1f1f1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .sidebar {
+  background: #1a1a1a;
+  color: #f1f1f1;
+}
+
+body.dark-mode .sidebar-menu a {
+  color: #f1f1f1;
+}
+
+body.dark-mode .sidebar-menu a:hover {
+  background: #333;
+}
+
+body.dark-mode table {
+  color: #f1f1f1;
+}
+
+body.dark-mode th,
+body.dark-mode td {
+  border-color: #444;
+}
+
+body.dark-mode thead {
+  background: #333;
+}
+
+body.dark-mode input,
+body.dark-mode select {
+  background: #333;
+  color: #f1f1f1;
+  border-color: #555;
+}
+
+body.dark-mode .btn-outline-success {
+  color: #4CAF50;
+  border-color: #4CAF50;
+}
+
+body.dark-mode .logout-btn {
+  background: #d32f2f !important;
+}
+
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+  <div class="sidebar-header">
+    <h2>العميدي للألكترونيات</h2>
+  </div>
+  
+  <ul class="sidebar-menu">
+    <li><a href="home.html"><i class="bi bi-house"></i> <span>الرئيسية</span></a></li>
+    <li><a href="products.html"><i class="bi bi-box-seam"></i> <span>المنتجات</span></a></li>
+    <li><a href="sales.html"><i class="bi bi-receipt"></i> <span>المبيعات</span></a></li>
+    <li><a href="debts.html"><i class="bi bi-credit-card"></i> <span>الديون</span></a></li>
+    <li><a href="reports.html"><i class="bi bi-graph-up"></i> <span>التقارير</span></a></li>
+    <li><a href="realprice.html"><i class="bi bi-tag"></i> <span>الأسعار الحقيقية</span></a></li>
+    <li><a href="expenses.html"><i class="bi bi-cash-stack"></i> <span>المصاريف</span></a></li>
+    <li><a href="settings.html"><i class="bi bi-gear"></i> <span>الإعدادات</span></a></li>
+    <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()">
+      <i class="bi bi-box-arrow-left"></i> <span>تسجيل الخروج</span>
+    </button>
+  </div>
+  </ul>
+  
+  
+</div>
+<div class="main-content">
+  <div class="dashboard">
+    <h1>لوحة التحكم</h1>
+    
+    <div class="cards-container">
+      <div class="card">
+        <h3>إجمالي المبيعات اليوم</h3>
+        <div class="stat-value" id="todaySales">0 د.ع</div>
+        <p>مقارنة بالأمس: <span id="salesChange">0%</span></p>
+      </div>
+      
+      <div class="card">
+        <h3>المنتجات المنخفضة</h3>
+        <div class="stat-value" id="lowStock">0</div>
+        <p>منتجات تحتاج إعادة تخزين</p>
+      </div>
+      
+      <div class="card">
+        <h3>إجمالي الديون</h3>
+        <div class="stat-value" id="totalDebts">0 د.ع</div>
+        <p>ديون غير مسددة</p>
+      </div>
+    </div>
+    
+    <div class="card chart-container">
+      <h3>مخطط المبيعات الأخيرة</h3>
+      <canvas id="salesChart"></canvas>
+    </div>
+
+  <script>
+    // تهيئة Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3T4pzPOvAw8mkfq_HXnpjPTR9orkj0ms",
+      authDomain: "almaydi-system.firebaseapp.com",
+      projectId: "almaydi-system",
+      storageBucket: "almaydi-system.appspot.com",
+      messagingSenderId: "783507593229",
+      appId: "1:783507593229:web:39087cbaa33268c62d5d44"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // تأمين الصفحة
+    if(localStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'index.html';
+    }
+    
+    // تحميل البيانات
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSalesData();
+      loadStockAlerts();
+      loadDebts();
+    });
+    
+    async function loadSalesData() {
+      const today = new Date().toISOString().split('T')[0];
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      let todayTotal = 0;
+      let yesterdayTotal = 0;
+      
+      // جلب مبيعات اليوم
+      const todaySnapshot = await db.collection('invoices')
+        .where('date', '>=', today)
+        .get();
+      
+      todaySnapshot.forEach(doc => {
+        todayTotal += doc.data().total;
+      });
+      
+      // جلب مبيعات الأمس
+      const yesterdaySnapshot = await db.collection('invoices')
+        .where('date', '>=', yesterdayStr)
+        .where('date', '<', today)
+        .get();
+      
+      yesterdaySnapshot.forEach(doc => {
+        yesterdayTotal += doc.data().total;
+      });
+      
+      // عرض البيانات
+      document.getElementById('todaySales').textContent = todayTotal.toLocaleString() + ' د.ع';
+      
+      const change = yesterdayTotal > 0 ? 
+        ((todayTotal - yesterdayTotal) / yesterdayTotal * 100).toFixed(2) : 0;
+      const changeElement = document.getElementById('salesChange');
+      changeElement.textContent = change + '%';
+      
+      if (change > 0) {
+        changeElement.style.color = 'green';
+      } else if (change < 0) {
+        changeElement.style.color = 'red';
+      }
+      
+      // رسم المخطط البياني
+      renderSalesChart();
+    }
+    
+    async function loadStockAlerts() {
+      const snapshot = await db.collection('products')
+        .where('quantity', '<', 5)
+        .get();
+      
+      document.getElementById('lowStock').textContent = snapshot.size;
+    }
+    
+    async function loadDebts() {
+      const snapshot = await db.collection('debts')
+        .where('paid', '==', false)
+        .get();
+      
+      let total = 0;
+      snapshot.forEach(doc => {
+        total += doc.data().amount;
+      });
+      
+      document.getElementById('totalDebts').textContent = total.toLocaleString() + ' د.ع';
+    }
+    
+    function renderSalesChart() {
+      const ctx = document.getElementById('salesChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+          datasets: [{
+            label: 'المبيعات',
+            data: [],
+            backgroundColor: 'rgba(26, 188, 156, 0.2)',
+            borderColor: 'rgba(26, 188, 156, 1)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+// تطبيق الوضع الليلي عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+  const isDarkMode = localStorage.getItem('darkMode') === 'true';
+  if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+    if (document.querySelector('.sidebar')) {
+      document.querySelector('.sidebar').classList.add('dark-mode');
+    }
+    if (document.querySelector('.main-content')) {
+      document.querySelector('.main-content').classList.add('dark-mode');
+    }
+  }
+  
+  // مراقبة تغييرات الوضع الليلي
+  window.addEventListener('storage', function(event) {
+    if (event.key === 'darkModeUpdated') {
+      const isDarkMode = localStorage.getItem('darkMode') === 'true';
+      if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+        if (document.querySelector('.sidebar')) {
+          document.querySelector('.sidebar').classList.add('dark-mode');
+        }
+        if (document.querySelector('.main-content')) {
+          document.querySelector('.main-content').classList.add('dark-mode');
+        }
+      } else {
+        document.body.classList.remove('dark-mode');
+        if (document.querySelector('.sidebar')) {
+          document.querySelector('.sidebar').classList.remove('dark-mode');
+        }
+        if (document.querySelector('.main-content')) {
+          document.querySelector('.main-content').classList.remove('dark-mode');
+        }
+      }
+    }
+  });
+});
+
+  </script>
+</body>
+</html>
