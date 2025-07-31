@@ -173,7 +173,7 @@ body.dark-mode .logout-btn {
 </div>
 
   <div class="main-content">
-    <h1>إدارة المنتجات</h1>
+    <h1>المنتجات</h1>
     
     <div class="card">
       <button class="btn-primary" onclick="toggleForm('productForm')">
@@ -189,10 +189,7 @@ body.dark-mode .logout-btn {
         <label>النوع</label><input type="text" id="prodType" required>
         <label>باركود المنتج</label>
         <div style="display: flex; gap: 10px;">
-          <input type="text" id="prodBarcode" placeholder="مسح أو إدخال يدوي">
-          <button type="button" class="btn-outline-success" onclick="startBarcodeScanner()">
-            <i class="bi bi-upc-scan"></i> مسح
-          </button>
+          <input type="text" id="prodBarcode" placeholder=" امسح هنا ">
         </div>
         <div id="barcodeScanner" style="display:none;">
           <div id="scannerContainer"></div>
