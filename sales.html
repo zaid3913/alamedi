@@ -185,6 +185,7 @@ body.dark-mode .invoice-summary div {
 </head>
 <body>
   <div class="sidebar">
+    <button id="toggleSidebarBtn" class="toggle-btn" title="إخفاء/إظهار">⯇</button>
     <div class="sidebar-header">
       <h2>العميدي للإلكترونيات</h2>
     </div>
@@ -301,13 +302,13 @@ body.dark-mode .invoice-summary div {
 <script>
     // تهيئة Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyB3T4pzPOvAw8mkfq_HXnpjPTR9orkj0ms",
-        authDomain: "almaydi-system.firebaseapp.com",
-        projectId: "almaydi-system",
-        storageBucket: "almaydi-system.appspot.com",
-        messagingSenderId: "783507593229",
-        appId: "1:783507593229:web:39087cbaa33268c62d5d44"
-    };
+  apiKey: "AIzaSyDcTygZ5wT__JQRsfwmtf5w7eBySur-hYo",
+  authDomain: "alamaydi-9c8eb.firebaseapp.com",
+  projectId: "alamaydi-9c8eb",
+  storageBucket: "alamaydi-9c8eb.firebasestorage.app",
+  messagingSenderId: "329074945274",
+  appId: "1:329074945274:web:21a3365f584ac7807e2d43"
+};
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -328,7 +329,7 @@ body.dark-mode .invoice-summary div {
 
     // تحميل المنتجات عند بدء التشغيل
     document.addEventListener('DOMContentLoaded', function() {
-        loadProducts();
+        // loadProducts();
         loadLastInvoiceNumber();
         
         // إضافة مستمعي الأحداث
@@ -350,22 +351,22 @@ body.dark-mode .invoice-summary div {
     });
 
     // تحميل المنتجات من Firebase 
-    function loadProducts() {
-        db.collection('products')
-            .where('quantity', '>', 0)
-            .onSnapshot((snapshot) => {
-                products = [];
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    data.id = doc.id;
-                    products.push(data);
-                });
-                console.log(`تم تحميل ${products.length} منتج`);
-            }, (error) => {
-                console.error('Error loading products:', error);
-                alert('حدث خطأ في تحميل المنتجات');
-            });
-    }
+    // function loadProducts() {
+    //     db.collection('products')
+    //         .where('quantity', '>', 0)
+    //         .onSnapshot((snapshot) => {
+    //             products = [];
+    //             snapshot.forEach((doc) => {
+    //                 const data = doc.data();
+    //                 data.id = doc.id;
+    //                 products.push(data);
+    //             });
+    //             console.log(`تم تحميل ${products.length} منتج`);
+    //         }, (error) => {
+    //             console.error('Error loading products:', error);
+    //             alert('حدث خطأ في تحميل المنتجات');
+    //         });
+    // }
 
     // تحميل آخر رقم فاتورة
     function loadLastInvoiceNumber() {
@@ -619,16 +620,24 @@ function calcLineTotal() {
 
    // مسح الباركود
     function handleBarcodeSale() {
-      const barcode = document.getElementById('saleBarcode').value.trim();
-        if (!barcode || barcode.length < 3) return;
-        
-        const product = products.find(p => p.barcode === barcode);
-        if (!product) {
+    const barcode = document.getElementById('saleBarcode').value.trim();
+    if (!barcode || barcode.length < 3) return;
+
+    db.collection('products')
+      .where('barcode', '==', barcode)
+      .limit(1)
+      .get()
+      .then(snapshot => {
+        if (snapshot.empty) {
             alert('المنتج غير موجود');
             return;
         }
-        
+
+        const doc = snapshot.docs[0];
+        const product = doc.data();
+        product.id = doc.id;
         selectedProduct = product;
+
         console.log(`تم العثور على المنتج: ${product.name} (${product.barcode})`);
         document.getElementById('productSearchInput').value = product.name;
         document.getElementById('salePrice').value = product.price;
@@ -636,7 +645,13 @@ function calcLineTotal() {
         document.getElementById('saleQty').max = product.quantity;
         calcLineTotal();
         document.getElementById('saleQty').focus();
-    }
+      })
+      .catch(error => {
+        console.error('خطأ في تحميل المنتج:', error);
+        alert('حدث خطأ أثناء البحث عن المنتج');
+      });
+}
+
 
     // تشغيل ماسح الباركود (مع إصلاح المشاكل)
     function startBarcodeScanner() {
@@ -721,52 +736,122 @@ function stopBarcodeScanner() {
     }
 
     // دالة البحث عن المنتج (إصلاح شامل)
-    function searchProductByName(searchText) {
-        const suggestionsDiv = document.getElementById('productSuggestions');
-        suggestionsDiv.innerHTML = '';
+    // function searchProductByName(searchText) {
+    //     const suggestionsDiv = document.getElementById('productSuggestions');
+    //     suggestionsDiv.innerHTML = '';
         
-        if (searchText.trim() === '') {
-            suggestionsDiv.style.display = 'none';
-            return;
-        }
+    //     if (searchText.trim() === '') {
+    //         suggestionsDiv.style.display = 'none';
+    //         return;
+    //     }
 
-        const filteredProducts = products.filter(p =>
-            p.name.toLowerCase().includes(searchText.toLowerCase()) || 
-            (p.barcode && p.barcode.includes(searchText))
-        );
+    //     const filteredProducts = products.filter(p =>
+    //         p.name.toLowerCase().includes(searchText.toLowerCase()) || 
+    //         (p.barcode && p.barcode.includes(searchText))
+    //     );
+
+    //     if (filteredProducts.length === 0) {
+    //         suggestionsDiv.innerHTML = '<div style="padding: 8px; color: #666;">لا توجد نتائج</div>';
+    //         suggestionsDiv.style.display = 'block';
+    //         return;
+    //     }
+
+    //     filteredProducts.forEach(product => {
+    //         const div = document.createElement('div');
+    //         div.innerHTML = `
+    //             <strong>${product.name}</strong> - 
+    //             ${product.price.toLocaleString()} د.ع - 
+    //             الكمية: ${product.quantity} - 
+    //             النوع: ${product.type}
+    //             ${product.barcode ? `<br>الباركود: ${product.barcode}` : ''}
+    //         `;
+    //         div.style.padding = '8px';
+    //         div.style.cursor = 'pointer';
+    //         div.style.borderBottom = '1px solid #eee';
+    //         div.style.fontSize = '14px';
+            
+    //         div.onclick = () => selectProductFromSearch(product);
+    //         suggestionsDiv.appendChild(div);
+    //     });
+
+    //     suggestionsDiv.style.display = 'block';
+    // }
+
+function searchProductByName(searchText) {
+    const suggestionsDiv = document.getElementById('productSuggestions');
+    suggestionsDiv.innerHTML = '';
+
+    if (searchText.trim() === '') {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+
+    db.collection('products')
+      .where('name', '>=', searchText)
+      .where('name', '<=', searchText + '\uf8ff')
+      .get()
+      .then(snapshot => {
+        const filteredProducts = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            data.id = doc.id;
+            filteredProducts.push(data);
+        });
 
         if (filteredProducts.length === 0) {
-            suggestionsDiv.innerHTML = '<div style="padding: 8px; color: #666;">لا توجد نتائج</div>';
+            suggestionsDiv.innerHTML = '<div style="padding: 10px; color: #777;">لا توجد نتائج</div>';
             suggestionsDiv.style.display = 'block';
             return;
         }
 
         filteredProducts.forEach(product => {
             const div = document.createElement('div');
+
+            // محتوى البطاقة
             div.innerHTML = `
-                <strong>${product.name}</strong> - 
-                ${product.price.toLocaleString()} د.ع - 
-                الكمية: ${product.quantity} - 
-                النوع: ${product.type}
-                ${product.barcode ? `<br>الباركود: ${product.barcode}` : ''}
+                <div style="display: flex; flex-direction: column;">
+                    <div style="font-weight: bold; font-size: 15px; color: #2c3e50;">${product.name}</div>
+                    <div style="font-size: 13px; color: #555;">
+                        ${product.price.toLocaleString()} د.ع - الكمية: ${product.quantity} - النوع: ${product.type || '---'}
+                        ${product.barcode ? `<br><span style="color:#888;">الباركود: ${product.barcode}</span>` : ''}
+                    </div>
+                </div>
             `;
-            div.style.padding = '8px';
+
+            // تنسيق البطاقة
+            div.style.padding = '12px';
+            div.style.margin = '5px 0';
+            div.style.borderRadius = '8px';
+            div.style.backgroundColor = '#f9f9f9';
+            div.style.transition = 'all 0.2s ease';
+            div.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
             div.style.cursor = 'pointer';
-            div.style.borderBottom = '1px solid #eee';
-            div.style.fontSize = '14px';
-            
+
+            // تأثير hover
+            div.onmouseenter = () => div.style.backgroundColor = '#e8f6ff';
+            div.onmouseleave = () => div.style.backgroundColor = '#f9f9f9';
+
+            // عند الضغط
             div.onclick = () => selectProductFromSearch(product);
+
             suggestionsDiv.appendChild(div);
         });
 
         suggestionsDiv.style.display = 'block';
-    }
+      })
+      .catch(error => {
+        console.error('خطأ في البحث:', error);
+        suggestionsDiv.innerHTML = '<div style="padding: 10px; color: red;">حدث خطأ أثناء البحث</div>';
+        suggestionsDiv.style.display = 'block';
+      });
+}
+
 
     // اختيار منتج من البحث (إصلاح شامل)
     function selectProductFromSearch(product) {
         selectedProduct = product;
         
-        document.getElementById('productSearchInput').value = product.name;
+        document.getElementById('productSearchInput').value = `${product.name} - ${product.type}`;
         document.getElementById('salePrice').value = product.price;
         document.getElementById('saleQty').max = product.quantity;
         document.getElementById('saleQty').value = 1;

@@ -189,3 +189,52 @@
     font-size: 1.2rem;
   }
 }
+
+/* الزر الثابت لإخفاء/إظهار السايدبار */
+.toggle-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px; /* بما أن الموقع RTL */
+  width: 35px;
+  height: 35px;
+  background-color: #1abc9c;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.toggle-btn:hover {
+  background-color: #16a085;
+  transform: scale(1.1);
+}
+
+/* الشريط الجانبي عند تصغيره */
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed .sidebar-header h2,
+.sidebar.collapsed .sidebar-menu li a span,
+.sidebar.collapsed .logout-btn span {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-menu li a {
+  justify-content: center;
+}
+
+/* انتقال ناعم للمحتوى */
+.main-content {
+  transition: margin-right 0.3s ease;
+}
+
+.sidebar.collapsed ~ .main-content {
+  margin-right: 70px !important;
+}

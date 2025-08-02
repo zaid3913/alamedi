@@ -1,5 +1,21 @@
 // تهيئة الشريط الجانبي عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
+
+const sidebar = document.querySelector('.sidebar');
+const toggleBtn = document.getElementById('toggleSidebarBtn');
+
+toggleBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('collapsed');
+
+  // تغيير رمز السهم
+  if (sidebar.classList.contains('collapsed')) {
+    toggleBtn.innerHTML = '⯈'; // سهم يمين
+  } else {
+    toggleBtn.innerHTML = '⯇'; // سهم يسار
+  }
+});
+
+  
   // تحديد الصفحة الحالية وإضافة صنف active
   highlightCurrentPage();
   
