@@ -537,29 +537,41 @@ function calcLineTotal() {
     }
 
     // تأكيد البيع (مع إصلاح إدارة الأخطاء)
-    function confirmSale() {
-        if (invoiceLines.length === 0) {
-            alert('الفاتورة فارغة، الرجاء إضافة منتجات');
+    async function confirmSale() {
+    if (invoiceLines.length === 0) {
+        alert('الفاتورة فارغة، الرجاء إضافة منتجات');
+        return;
+    }
+    
+    const grandTotal = invoiceLines.reduce((sum, line) => sum + line.lineTotal, 0);
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const paid = parseFloat(document.getElementById('paid').value) || 0;
+    const netTotal = grandTotal - discount;
+    
+    if (paid < netTotal) {
+        if (!confirm(`المبلغ المدفوع (${paid.toLocaleString()} د.ع) أقل من إجمالي الفاتورة (${netTotal.toLocaleString()} د.ع). هل تريد المتابعة كبيع بالدين؟`)) {
             return;
         }
+    }
+    
+    // جلب أحدث بيانات الكمية من قاعدة البيانات
+    try {
+        const productIds = invoiceLines.map(line => line.productId);
+        const productsSnapshot = await db.collection('products')
+            .where(firebase.firestore.FieldPath.documentId(), 'in', productIds)
+            .get();
         
-        const grandTotal = invoiceLines.reduce((sum, line) => sum + line.lineTotal, 0);
-        const discount = parseFloat(document.getElementById('discount').value) || 0;
-        const paid = parseFloat(document.getElementById('paid').value) || 0;
-        const netTotal = grandTotal - discount;
+        const latestProducts = {};
+        productsSnapshot.forEach(doc => {
+            latestProducts[doc.id] = doc.data().quantity;
+        });
         
-        if (paid < netTotal) {
-            if (!confirm(`المبلغ المدفوع (${paid.toLocaleString()} د.ع) أقل من إجمالي الفاتورة (${netTotal.toLocaleString()} د.ع). هل تريد المتابعة كبيع بالدين؟`)) {
-                return;
-            }
-        }
-        
-        // التحقق من توفر الكميات قبل الحفظ
+        // التحقق من توفر الكميات
         let canProceed = true;
         invoiceLines.forEach(line => {
-            const product = products.find(p => p.id === line.productId);
-            if (!product || line.qty > product.quantity) {
-                alert(`المنتج ${line.productName} لم تعد الكمية متوفرة`);
+            const availableQuantity = latestProducts[line.productId] || 0;
+            if (line.qty > availableQuantity) {
+                alert(`المنتج ${line.productName} لم تعد الكمية متوفرة (المطلوب: ${line.qty}, المتاح: ${availableQuantity})`);
                 canProceed = false;
             }
         });
@@ -596,25 +608,21 @@ function calcLineTotal() {
             status: paid >= netTotal ? 'مدفوعة' : 'دين'
         };
         
-        // حفظ الفاتورة
         const invoiceRef = db.collection('invoices').doc(currentInvoiceNumber.toString());
         batch.set(invoiceRef, invoice);
         
-        // تحديث رقم الفاتورة الأخير
         const metadataRef = db.collection('metadata').doc('invoices');
         batch.set(metadataRef, { lastNumber: currentInvoiceNumber }, { merge: true });
         
-        batch.commit()
-            .then(() => {
-                alert(`تم حفظ الفاتورة رقم ${currentInvoiceNumber} بنجاح`);
-                clearInvoice();
-            })
-            .catch(error => {
-                console.error('Error confirming sale: ', error);
-                alert('حدث خطأ أثناء حفظ الفاتورة');
-                currentInvoiceNumber--;
-            });
+        await batch.commit();
+        alert(`تم حفظ الفاتورة رقم ${currentInvoiceNumber} بنجاح`);
+        clearInvoice();
+    } catch (error) {
+        console.error('Error confirming sale: ', error);
+        alert('حدث خطأ أثناء حفظ الفاتورة');
+        currentInvoiceNumber--;
     }
+}
 
 
 
